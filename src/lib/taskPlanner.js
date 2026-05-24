@@ -23,7 +23,7 @@ const DEFAULT_DAILY_TASKS = [
     priorityScore: 50,
     steps: [
       { label: "写下任务目标", minutes: 2 },
-      { label: "完成最小一步", minutes: 3 },
+      { label: "做下一步", minutes: 3 },
       { label: "记录完成结果", minutes: 2 },
     ],
   },
@@ -409,7 +409,7 @@ function actionizeStepLabel(label) {
   if (/学习|复习|刷题|练习/.test(raw)) return "写下第一题第一步";
   if (/准备|思路|计划/.test(raw)) return "拿出纸笔并写下 1 个最小动作";
   if (/提交|发送/.test(raw)) return "检查内容并点击确认";
-  return `完成「${shortTitle(raw, 10)}」的最小一步`;
+  return shortTitle(raw, 10);
 }
 
 function toStep(label, minutes) {
