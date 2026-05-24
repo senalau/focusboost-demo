@@ -22,9 +22,9 @@ const DEFAULT_DAILY_TASKS = [
     urgency: 5,
     priorityScore: 50,
     steps: [
-      { label: "打开电脑", minutes: 2 },
-      { label: "打开对应文档/工具", minutes: 3 },
-      { label: "完成第一个最小动作", minutes: 4 },
+      { label: "写下任务目标", minutes: 2 },
+      { label: "完成最小一步", minutes: 3 },
+      { label: "记录完成结果", minutes: 2 },
     ],
   },
 ];
@@ -60,58 +60,51 @@ const TASK_CONTEXTS = [
     test: (t) => /买|取|寄|送|外出|下楼|出去/.test(t),
     simple: false,
     steps: () => [
-      { label: `出门/下楼`, minutes: 2 },
+      { label: `确认要买/取的东西`, minutes: 1 },
+      { label: `带好钥匙出门`, minutes: 2 },
       { label: `走到目的地`, minutes: 3 },
-      { label: `挑选/取物品`, minutes: 3 },
-      { label: `付款/确认`, minutes: 2 },
-      { label: `返回`, minutes: 3 },
+      { label: `完成购买/取件`, minutes: 3 },
+      { label: `带东西返回`, minutes: 3 },
     ],
   },
   {
     test: (t) => /写|撰写|起草|论文|报告|周报|文案|邮件/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音扣桌上`, minutes: 2 },
-      { label: `关闭社交与无关标签页`, minutes: 2 },
-      { label: `打开 Word 软件或写作文档`, minutes: 2 },
-      { label: `写下第一句标题`, minutes: 2 },
-      { label: `写下引言第一句话`, minutes: 4 },
-      { label: `补上 3 个要点`, minutes: 5 },
-      { label: `读完这一小段并标记错字`, minutes: 3 },
-      { label: `保存文档`, minutes: 1 },
+      { label: `写下标题`, minutes: 2 },
+      { label: `列出 3 个要点`, minutes: 4 },
+      { label: `写第一句话`, minutes: 3 },
+      { label: `补充一个例子`, minutes: 4 },
+      { label: `改短一段话`, minutes: 3 },
+      { label: `保存最终版本`, minutes: 1 },
     ],
   },
   {
     test: (t) => /读|阅读|复习|背诵|预习/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音，计时器备好`, minutes: 2 },
-      { label: `清空桌面只留阅读材料`, minutes: 2 },
-      { label: `翻到起始页/章节`, minutes: 2 },
-      { label: `读完第一段并圈出关键词`, minutes: 5 },
-      { label: `标记重点内容`, minutes: 3 },
-      { label: `读完下一页并画一条线`, minutes: 5 },
-      { label: `写下今天阅读的要点`, minutes: 2 },
+      { label: `翻到目标章节`, minutes: 2 },
+      { label: `读完第一段`, minutes: 4 },
+      { label: `圈出关键词`, minutes: 3 },
+      { label: `读完下一页`, minutes: 5 },
+      { label: `写下 1 个要点`, minutes: 2 },
     ],
   },
   {
     test: (t) => /代码|编程|开发|debug|修bug|部署/i.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音，退出聊天工具`, minutes: 2 },
-      { label: `只保留 IDE 与必要文档`, minutes: 2 },
-      { label: `打开项目仓库/分支`, minutes: 2 },
-      { label: `找到要改的文件位置`, minutes: 2 },
-      { label: `写下一行最小逻辑`, minutes: 5 },
-      { label: `运行本地检查或单测`, minutes: 4 },
-      { label: `记下下一步要改什么`, minutes: 2 },
+      { label: `找到要改的文件`, minutes: 2 },
+      { label: `定位问题代码`, minutes: 3 },
+      { label: `改一处最小逻辑`, minutes: 5 },
+      { label: `运行本地检查`, minutes: 4 },
+      { label: `记录下一步修改`, minutes: 2 },
     ],
   },
   {
     test: (t) => /健身|运动|跑步|瑜伽|训练/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音或开专注模式`, minutes: 2 },
       { label: `换上运动服/鞋`, minutes: 2 },
       { label: `热身 3 分钟`, minutes: 3 },
       { label: `完成主要训练动作`, minutes: 5 },
@@ -123,7 +116,6 @@ const TASK_CONTEXTS = [
     test: (t) => /打扫|清洁|收纳|整理|家务/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音`, minutes: 1 },
       { label: `选定第一个小区域`, minutes: 1 },
       { label: `清理桌面左上角区域`, minutes: 4 },
       { label: `把 5 件物品放回原位`, minutes: 5 },
@@ -135,10 +127,9 @@ const TASK_CONTEXTS = [
     test: (t) => /会议|汇报|演示|答辩|面试/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音`, minutes: 1 },
-      { label: `关闭无关通知`, minutes: 1 },
-      { label: `打开提纲/幻灯片`, minutes: 2 },
-      { label: `准备一杯水，坐直`, minutes: 2 },
+      { label: `列出汇报重点`, minutes: 3 },
+      { label: `检查第一页标题`, minutes: 2 },
+      { label: `补充核心结论`, minutes: 4 },
       { label: `朗读开场 30 秒`, minutes: 3 },
       { label: `演练最关键的一页/一段`, minutes: 5 },
       { label: `写下 1 个可能被问的问题`, minutes: 3 },
@@ -148,10 +139,8 @@ const TASK_CONTEXTS = [
     test: (t) => /学|练习|刷题|备考/.test(t),
     simple: false,
     steps: () => [
-      { label: `手机静音`, minutes: 1 },
-      { label: `桌面只留练习册/平板`, minutes: 1 },
-      { label: `翻到今天要做的题号/章节`, minutes: 2 },
-      { label: `备好草稿纸和笔`, minutes: 2 },
+      { label: `翻到目标题号`, minutes: 2 },
+      { label: `写下已知条件`, minutes: 3 },
       { label: `写下第 1 道题的第一步`, minutes: 5 },
       { label: `对答案并标出错因`, minutes: 3 },
       { label: `写下第 2 道题的已知条件`, minutes: 5 },
@@ -159,57 +148,83 @@ const TASK_CONTEXTS = [
   },
 ];
 
-const SYSTEM_PROMPT = `你是 FocusBoost 的 ADHD 友好任务规划 AI。用户用中文描述待办（可能来自语音转写）。
+const SYSTEM_PROMPT = `你是 FocusBoost 的 ADHD 友好任务拆解 AI。用户会用中文描述一个或多个待办（可能来自语音转写）。
 
-## 第一步：识别与排序
-1. 从用户原文提取所有独立任务，禁止编造。
-2. 结合用户表述与常识，为每项判断：
-   - priority: high | medium | low（重要程度）
-   - urgency: 1-10（紧急程度）
-   - priorityScore: 0-100（综合分，用于排序，越高越先做）
-3. tasks 数组必须按 priorityScore 降序排列。
+你的目标：先把用户的话提炼成清晰的「主线任务」，再围绕任务本身拆成简洁、具体、低压力的「支线任务」。
 
-## 第二步：判断任务复杂度
-**单动作简单任务**（不需要复杂拆解）：
-- 日常生活小动作：洗衣服、洗碗、晾衣服、拖地、扫地、倒垃圾
-- 个人习惯：刷牙、洗脸、洗澡、洗头、喝水、喝咖啡
-- 简单购物：买奶茶、买咖啡、买早餐
-- 宠物照料：浇水、喂猫、遛狗
-- 一键操作：开空调、关灯、锁门
+## 1. 主线任务提炼规则
+- 从用户原文中提炼真实任务，禁止编造。
+- title 必须是总结后的主线任务，不要原封不动复制用户长句。
+- title 保留任务对象和结果，去掉口头禅、情绪、解释、时间废话。
+- title 要像待办清单标题，建议 4-12 个字。
+- 如果用户说的是「我要把明天汇报的产品定位改一下」，title 应为「修改产品定位」或「准备明天汇报」。
+- 如果用户说的是「我要写一份关于 FocusBoost 的介绍」，title 应为「写 FocusBoost 介绍」。
 
-**多步骤复杂任务**（需要完整拆解）：写作、阅读、编程、学习、会议等。
+## 2. 支线任务拆解规则
+- steps 必须服务于这个主线任务本身，不要出现泛化步骤。
+- 禁止出现这些无意义/工具型表达：
+  - 打开相关工具
+  - 打开对应文档/工具
+  - 完成第一个动作
+  - 继续下一步
+  - 开始工作
+  - 准备资料
+  - 整理思路
+- 不要为了摄像头/浏览器验证而写「打开工具」。MVP 不涉及浏览器行为验证。
+- 支线任务要像用户真的下一步要做的事，跟任务对象强相关。
+- 每条支线任务尽量短，建议 6-14 个字。
+- 每条支线任务只做一件事。
+- 每条支线任务 1-5 分钟。
+- 复杂任务 3-6 步即可；简单任务 1-3 步即可。
 
-## 第三步：ADHD 支线任务拆解
+## 3. 不同任务类型示例
 
-### A. 单动作简单任务（精简版）
-仅1步，步骤标签即任务本身，不需要额外拆解。
-示例「洗衣服」：洗衣服（3min）
+用户：我要写 FocusBoost 的产品定位
+输出：
+title: 写产品定位
+steps:
+- 写下目标用户
+- 写下核心痛点
+- 写一句产品定义
+- 改短这句话
+- 保存最终版本
 
-### B. 多步骤复杂任务（完整版）
-按实际流程拆解，每步提供明确的起始动作，降低认知负荷。
-根据任务内容智能推断场景，例如「下楼买明天早上早餐」→ 第一步应为「穿鞋并下楼去超市/便利店」。
-示例「写论文」：关闭无关标签页→打开 Word 软件或写作文档→写下第一句标题→写下引言第一句话→补上 3 个要点→保存文档
+用户：我要改一下 AI 拆解逻辑
+输出：
+title: 修改 AI 拆解逻辑
+steps:
+- 找到拆解提示词
+- 删掉泛化步骤
+- 补充主线提炼规则
+- 写两个测试任务
+- 保存并重新发布
 
-### 通用要求
-- 每步 1-5 分钟
-- 每步必须是单一、可执行、可被摄像头/浏览器行为验证的动作
-- 每步必须以动作动词开头，例如：打开、关闭、拿出、放到、点击、输入、写下、读完、标记、找到、翻到、备好、保存、提交、发送、拍照
-- 避免「开始工作」「执行任务」等模糊描述
-- 禁止主题型/结果型步骤，例如「写报告引言」「准备资料」「整理思路」「学习数学」「继续写」「优化代码」
-- 提供明确的起始动作（第一个动作要具体）
-- 步骤标签不要重复主任务名称，只需描述动作本身
-  错误示例：「完成洗衣服」「继续洗衣服下一步」
-  正确示例：「把衣服放进洗衣机」「按开始键」
-- 写作类任务必须拆到物理启动动作，不要输出「写报告引言」。例如用户说「写报告引言」，支线任务应包含「打开 Word 软件或写作文档」「写下第一句标题」「写下引言第一句话」
+用户：我要准备明天的汇报
+输出：
+title: 准备明天汇报
+steps:
+- 列出汇报重点
+- 检查第一页标题
+- 补充核心结论
+- 练习开场 30 秒
+- 记录一个风险问题
 
-## 输出 JSON（仅 JSON，无 markdown）
+用户：洗衣服
+输出：
+title: 洗衣服
+steps:
+- 收起脏衣服
+- 放进洗衣机
+- 按下开始键
+
+## 4. 输出 JSON（仅 JSON，无 markdown）
 {
   "tasks": [{
-    "title": "简短任务名",
+    "title": "提炼后的主线任务",
     "priority": "high|medium|low",
     "urgency": 1-10,
     "priorityScore": 0-100,
-    "steps": [{ "label": "具体动作", "minutes": 3 }]
+    "steps": [{ "label": "具体支线任务", "minutes": 3 }]
   }]
 }`;
 
@@ -238,8 +253,8 @@ function summarizeTitle(text) {
   t = t.replace(/^(今晚|今天|今早|明早|今天下午)\s*/g, "");
   // 去除开头的时间期限表达
   t = t.replace(/^\d{1,2}点(前|之前|半)?\s*/g, "");
-  // 去除口头禅/语气词前缀
-  t = t.replace(/^(还要|也要|还得|得去|要去|需要去|去一下|赶紧|赶快|先|记得|要)\s*/g, "");
+  // 去除口头禅/语气词前缀，保留任务对象
+  t = t.replace(/^(我想要|我想|我要|我需要|我得|需要|帮我|请帮我|麻烦帮我|还要|也要|还得|得去|要去|需要去|去一下|赶紧|赶快|先|记得|要)\s*/g, "");
   // 规范化：下去买 → 下楼买
   t = t.replace(/下去买/g, "下楼买");
   // 去掉时间修饰和名词之间的 "的"：明天早上的早餐 → 明天早上早餐
@@ -297,21 +312,21 @@ function scoreItem(text) {
 
 function actionizeStepLabel(label) {
   const raw = String(label || "").trim();
-  if (!raw) return "打开任务工具并写下第一步";
+  if (!raw) return "写下任务的第一步";
   if (ACTION_START_PATTERN.test(raw) && !VAGUE_STEP_PATTERN.test(raw)) return raw;
 
   if (/引言|开头|报告|论文|周报|文案|邮件|写/.test(raw)) {
-    if (/引言|开头/.test(raw)) return "打开 Word 软件并写下引言第一句话";
-    if (/标题/.test(raw)) return "打开写作文档并写下第一句标题";
-    return "打开 Word 软件并写下第一句标题";
+    if (/引言|开头/.test(raw)) return "写下引言第一句话";
+    if (/标题/.test(raw)) return "写下第一句标题";
+    return "写下第一句标题";
   }
-  if (/资料|文献|阅读|看/.test(raw)) return "打开资料页面并读完第一段";
-  if (/代码|bug|开发|编程|优化|修改/.test(raw)) return "打开 IDE 并找到要修改的文件";
+  if (/资料|文献|阅读|看/.test(raw)) return "读完第一段并圈关键词";
+  if (/代码|bug|开发|编程|优化|修改/.test(raw)) return "找到要修改的文件";
   if (/整理|收纳|清理/.test(raw)) return "选定桌面左上角并清走 3 件物品";
-  if (/学习|复习|刷题|练习/.test(raw)) return "打开练习册并写下第一题第一步";
+  if (/学习|复习|刷题|练习/.test(raw)) return "写下第一题第一步";
   if (/准备|思路|计划/.test(raw)) return "拿出纸笔并写下 1 个最小动作";
-  if (/提交|发送/.test(raw)) return "打开提交页面并点击确认按钮";
-  return `打开相关工具并完成「${shortTitle(raw, 10)}」的第一步`;
+  if (/提交|发送/.test(raw)) return "检查内容并点击确认";
+  return `完成「${shortTitle(raw, 10)}」的最小一步`;
 }
 
 function toStep(label, minutes) {
@@ -377,12 +392,10 @@ function buildAdhdStepsForTask(title) {
 
   // 默认模板（复杂任务）：以任务完成为目标拆解
   return normalizeStepsList([
-    toStep(`打开电脑`, 2),
-    toStep(`打开相关文档/工具`, 3),
-    toStep(`完成第一个动作`, 4),
-    toStep(`继续下一步`, 5),
-    toStep(`检查完成情况`, 3),
-    toStep(`收尾`, 4),
+    toStep(`写下任务目标`, 2),
+    toStep(`列出 3 个要点`, 4),
+    toStep(`完成最小一步`, 5),
+    toStep(`检查完成结果`, 3),
   ]);
 }
 
