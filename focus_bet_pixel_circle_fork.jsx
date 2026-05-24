@@ -2201,23 +2201,32 @@ export default function FocusBoostPrototype() {
   }, [userStage, totalSteps, completedFragmentCount, demoSupportEvents, receiveSupportSkill]);
 
   const handleSubmitTask = async () => {
-    const normalizedInput = taskInput.trim();
-    if (!normalizedInput) return;
-
+    if (!taskInput.trim()) return;
     setPlanError("");
     setStakeError("");
+    if (stakeAmount <= 0) {
+      setStakeError("请至少携带 1.0 个专注币");
+      return;
+    }
+    if (stakeAmount > focusCoinBalance) {
+      setStakeError(`当前最多可携带 ${formatCoin(focusCoinBalance)} 个专注币`);
+      return;
+    }
     setPlanLoading(true);
-    setUserStage("planning");
-
     try {
-      const plan = await planTasksFromInput(normalizedInput);
+      const plan = await planTasksFromInput(taskInput);
+      const nextBalance = focusCoinBalance - stakeAmount;
+      const nextRollover = pot + stakeAmount;
       setDailyTasks(plan.tasks);
       setPlanSource(plan.source);
       setCurrentTaskIndex(0);
       setCurrentStepIndex(0);
       setProgress(12);
+      setFocusCoinBalance(nextBalance);
+      setPot(nextRollover);
+      setChallengeLocked(true);
       setTaskReady(false);
-      setChallengeStarted(false);
+      setChallengeStarted(true);
       setWalletOpen(false);
       setOverdueOpen(false);
       setOverdueMessage("");
@@ -2226,13 +2235,17 @@ export default function FocusBoostPrototype() {
       setUnlockedStakeCoins(0);
       setDoubleRewardCoins(0);
       setDemoSupportEvents({ double: false, cheer: false });
-
-      // 先展示 AI 拆解结果，让用户确认/编辑支线任务；
-      // 专注币只在下一步「锁定 FocusCoin」时扣除，避免输入后直接跳进任务。
-      setUserStage("breakdown");
+      saveFocusCoinSnapshot({
+        focusCoins: nextBalance,
+        challengeLocked: true,
+        rolloverCoins: nextRollover,
+        lockedAt: new Date().toISOString(),
+        lastDailyGrantDate: initialCoinSnapshot.lastDailyGrantDate,
+      });
+      setUserStage("active");
     } catch (error) {
       setPlanError(error.message || "任务规划失败，请重试");
-      setUserStage("input");
+      setUserStage("idle");
     } finally {
       setPlanLoading(false);
     }
