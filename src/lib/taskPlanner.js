@@ -52,19 +52,63 @@ const SIMPLE_TASK_KEYWORDS = [
   /买.*奶茶|买.*咖啡|买.*早餐/i,
 ];
 
-const ACTION_START_PATTERN = /^(打开|关掉|关闭|拿出|放到|放进|走到|点击|新建|复制|粘贴|输入|写下|读完|标记|找到|翻到|备好|换上|坐下|保存|提交|发送|拍照|清理|归位|按下|选择|启动|运行|朗读|检查|记录|退出|只保留)/;
+const ACTION_START_PATTERN = /^(打开|关掉|关闭|拿出|放到|放进|走到|点击|新建|复制|粘贴|输入|写下|读完|标记|找到|翻到|备好|换上|坐下|保存|提交|发送|拍照|清理|归位|按下|选择|启动|运行|朗读|检查|记录|退出|只保留|穿鞋|下楼|出门|前往|走去|到达|挑选|购买|买|付款|带回|返回|回家|收起|晾好|删掉|补充|测试|练习|完成)/;
 const VAGUE_STEP_PATTERN = /^(写|准备|整理|学习|研究|思考|处理|推进|继续|完成|做|弄|搞|优化|修改|看|阅读)(?!下|完|到|开|出|好)/;
+
+
+function extractPurchaseItem(title) {
+  const text = String(title || "");
+  const known = text.match(/早餐|早饭|午餐|午饭|晚餐|晚饭|咖啡|奶茶|水果|药|菜|零食|饮料|面包|水/);
+  if (known) return known[0];
+  const match = text.match(/买(.+?)(?:$|[，。；,;]|然后|再|顺便|回来|回家)/);
+  if (!match) return "东西";
+  let item = match[1]
+    .replace(/^(一份|一个|一杯|一些|点|附近的|楼下的|便利店的|超市的|商店的)/, "")
+    .replace(/(回来|回家|带回家)$/g, "")
+    .trim();
+  return item || "东西";
+}
+
+function getPurchaseDestination(title, item) {
+  const text = String(title || "");
+  if (/便利店/.test(text)) return "便利店";
+  if (/超市/.test(text)) return "超市";
+  if (/商店|小店/.test(text)) return "商店";
+  if (/咖啡店/.test(text)) return "咖啡店";
+  if (/药店/.test(text)) return "药店";
+  if (/菜市场|市场/.test(text)) return "菜市场";
+  if (/早餐|早饭|咖啡|奶茶|面包|零食|饮料/.test(item)) return "附近商店";
+  return "目的地";
+}
+
+function purchaseStepsFor(title) {
+  const item = extractPurchaseItem(title);
+  const destination = getPurchaseDestination(title, item);
+  const firstStep = /网购|线上|网上/.test(title) ? "确认购买内容" : "穿鞋下楼";
+  const placeStep = destination === "目的地" ? "前往购买地点" : `前往${destination}`;
+  const buyStep = item === "东西" ? "挑选并完成购买" : `挑选并购买${item}`;
+  return [
+    { label: firstStep, minutes: 2 },
+    { label: placeStep, minutes: 3 },
+    { label: buyStep, minutes: 4 },
+    { label: "回家", minutes: 3 },
+  ];
+}
 
 const TASK_CONTEXTS = [
   {
-    test: (t) => /买|取|寄|送|外出|下楼|出去/.test(t),
+    test: (t) => /买|下楼.*买|楼下.*买|出去.*买|去.*买/.test(t),
     simple: false,
-    steps: () => [
-      { label: `确认要买/取的东西`, minutes: 1 },
-      { label: `带好钥匙出门`, minutes: 2 },
-      { label: `走到目的地`, minutes: 3 },
-      { label: `完成购买/取件`, minutes: 3 },
-      { label: `带东西返回`, minutes: 3 },
+    steps: (title) => purchaseStepsFor(title),
+  },
+  {
+    test: (t) => /取|寄|送/.test(t),
+    simple: false,
+    steps: (title) => [
+      { label: /下楼|楼下|出门|出去/.test(title) ? "穿鞋下楼" : "穿鞋出门", minutes: 2 },
+      { label: /快递/.test(title) ? "前往快递点" : "前往目的地", minutes: 3 },
+      { label: /寄/.test(title) ? "完成寄件" : /送/.test(title) ? "送到指定地点" : "取回物品", minutes: 4 },
+      { label: "回家", minutes: 3 },
     ],
   },
   {
@@ -76,7 +120,16 @@ const TASK_CONTEXTS = [
       { label: `写第一句话`, minutes: 3 },
       { label: `补充一个例子`, minutes: 4 },
       { label: `改短一段话`, minutes: 3 },
-      { label: `保存最终版本`, minutes: 1 },
+    ],
+  },
+  {
+    test: (t) => /洗衣服|洗衣|晾衣服/.test(t),
+    simple: false,
+    steps: () => [
+      { label: `收起脏衣服`, minutes: 2 },
+      { label: `放进洗衣机`, minutes: 2 },
+      { label: `按下开始键`, minutes: 1 },
+      { label: `晾好衣服`, minutes: 4 },
     ],
   },
   {
@@ -88,6 +141,16 @@ const TASK_CONTEXTS = [
       { label: `圈出关键词`, minutes: 3 },
       { label: `读完下一页`, minutes: 5 },
       { label: `写下 1 个要点`, minutes: 2 },
+    ],
+  },
+  {
+    test: (t) => /AI 拆解|ai 拆解|拆解逻辑|拆解规则|提示词|prompt/i.test(t),
+    simple: false,
+    steps: () => [
+      { label: `找到拆解规则`, minutes: 2 },
+      { label: `删掉泛化步骤`, minutes: 3 },
+      { label: `补充行动流示例`, minutes: 4 },
+      { label: `测试两个任务`, minutes: 4 },
     ],
   },
   {
@@ -109,7 +172,6 @@ const TASK_CONTEXTS = [
       { label: `热身 3 分钟`, minutes: 3 },
       { label: `完成主要训练动作`, minutes: 5 },
       { label: `拉伸放松`, minutes: 3 },
-      { label: `记录完成情况`, minutes: 2 },
     ],
   },
   {
@@ -117,10 +179,9 @@ const TASK_CONTEXTS = [
     simple: false,
     steps: () => [
       { label: `选定第一个小区域`, minutes: 1 },
-      { label: `清理桌面左上角区域`, minutes: 4 },
-      { label: `把 5 件物品放回原位`, minutes: 5 },
+      { label: `清走 3 件物品`, minutes: 4 },
+      { label: `把物品放回原位`, minutes: 5 },
       { label: `检查完成情况`, minutes: 3 },
-      { label: `拍照记录成果`, minutes: 2 },
     ],
   },
   {
@@ -128,11 +189,9 @@ const TASK_CONTEXTS = [
     simple: false,
     steps: () => [
       { label: `列出汇报重点`, minutes: 3 },
-      { label: `检查第一页标题`, minutes: 2 },
+      { label: `检查页面顺序`, minutes: 2 },
       { label: `补充核心结论`, minutes: 4 },
-      { label: `朗读开场 30 秒`, minutes: 3 },
-      { label: `演练最关键的一页/一段`, minutes: 5 },
-      { label: `写下 1 个可能被问的问题`, minutes: 3 },
+      { label: `练习开场 30 秒`, minutes: 3 },
     ],
   },
   {
@@ -141,81 +200,100 @@ const TASK_CONTEXTS = [
     steps: () => [
       { label: `翻到目标题号`, minutes: 2 },
       { label: `写下已知条件`, minutes: 3 },
-      { label: `写下第 1 道题的第一步`, minutes: 5 },
-      { label: `对答案并标出错因`, minutes: 3 },
-      { label: `写下第 2 道题的已知条件`, minutes: 5 },
+      { label: `完成第一题第一步`, minutes: 5 },
+      { label: `对答案并标错因`, minutes: 3 },
     ],
   },
-];
+]
 
-const SYSTEM_PROMPT = `你是 FocusBoost 的 ADHD 友好任务拆解 AI。用户会用中文描述一个或多个待办（可能来自语音转写）。
+const SYSTEM_PROMPT = `你是 FocusBoost 的 ADHD 友好任务拆解 AI。用户会用中文说一整段话，里面可能包含一个或多个真实待办。你的任务是：先从用户的话里提炼出「几个主线任务」，再把每个主线任务拆成符合现实行动顺序的「支线任务」。
 
-你的目标：先把用户的话提炼成清晰的「主线任务」，再围绕任务本身拆成简洁、具体、低压力的「支线任务」。
+核心原则：支线任务不是抽象建议，也不是工具操作，而是用户在现实中真的会做的连续动作。
 
 ## 1. 主线任务提炼规则
 - 从用户原文中提炼真实任务，禁止编造。
-- title 必须是总结后的主线任务，不要原封不动复制用户长句。
+- 如果用户一句话里有多个独立目标，要拆成多个 tasks。
+  - 例如「下楼买早餐，然后回来写产品定位」应拆成「买早餐」和「写产品定位」。
+- 如果用户描述的是一个连续行动路线，不要拆成多个主线任务。
+  - 例如「下楼买早餐」只能是一个主线任务：「买早餐」。
+  - 不要把「下楼」「买早餐」「回家」拆成三个主线任务，它们应该是同一个任务的支线步骤。
+- title 必须是提炼后的待办标题，不要原封不动复制用户长句。
 - title 保留任务对象和结果，去掉口头禅、情绪、解释、时间废话。
-- title 要像待办清单标题，建议 4-12 个字。
-- 如果用户说的是「我要把明天汇报的产品定位改一下」，title 应为「修改产品定位」或「准备明天汇报」。
-- 如果用户说的是「我要写一份关于 FocusBoost 的介绍」，title 应为「写 FocusBoost 介绍」。
+- title 建议 3-12 个字。
 
 ## 2. 支线任务拆解规则
-- steps 必须服务于这个主线任务本身，不要出现泛化步骤。
+- steps 必须按真实行动顺序排列。
+- 每个 step 要跟任务本身强相关，不能出现泛化废话。
+- 不要拆得太细，通常 3-5 步即可；非常简单的任务 2-3 步即可。
+- 每条 step 建议 4-14 个字。
+- 每条 step 只做一件清楚的事。
+- 每条 step 预估 1-5 分钟。
 - 禁止出现这些无意义/工具型表达：
   - 打开相关工具
   - 打开对应文档/工具
+  - 准备资料
+  - 整理思路
   - 完成第一个动作
   - 继续下一步
   - 开始工作
-  - 准备资料
-  - 整理思路
-- 不要为了摄像头/浏览器验证而写「打开工具」。MVP 不涉及浏览器行为验证。
-- 支线任务要像用户真的下一步要做的事，跟任务对象强相关。
-- 每条支线任务尽量短，建议 6-14 个字。
-- 每条支线任务只做一件事。
-- 每条支线任务 1-5 分钟。
-- 复杂任务 3-6 步即可；简单任务 1-3 步即可。
+  - 做一点
+  - 处理一下
+- 不要为了摄像头/浏览器验证写「打开工具」。MVP 不涉及浏览器行为验证。
 
-## 3. 不同任务类型示例
+## 3. 关键示例
 
-用户：我要写 FocusBoost 的产品定位
+用户：我想下楼买早餐
 输出：
-title: 写产品定位
+title: 买早餐
 steps:
-- 写下目标用户
-- 写下核心痛点
-- 写一句产品定义
-- 改短这句话
-- 保存最终版本
+- 穿鞋下楼
+- 前往便利店
+- 挑选并购买早餐
+- 回家
 
-用户：我要改一下 AI 拆解逻辑
+用户：下楼买杯咖啡
 输出：
-title: 修改 AI 拆解逻辑
+title: 买咖啡
 steps:
-- 找到拆解提示词
-- 删掉泛化步骤
-- 补充主线提炼规则
-- 写两个测试任务
-- 保存并重新发布
+- 穿鞋下楼
+- 前往附近商店
+- 挑选并购买咖啡
+- 回家
 
-用户：我要准备明天的汇报
-输出：
-title: 准备明天汇报
-steps:
-- 列出汇报重点
-- 检查第一页标题
-- 补充核心结论
-- 练习开场 30 秒
-- 记录一个风险问题
-
-用户：洗衣服
+用户：我要洗衣服
 输出：
 title: 洗衣服
 steps:
 - 收起脏衣服
 - 放进洗衣机
 - 按下开始键
+- 晾好衣服
+
+用户：我想把 FocusBoost 的产品定位改清楚一点
+输出：
+title: 修改产品定位
+steps:
+- 写下目标用户
+- 写下核心痛点
+- 写一句产品定义
+- 删掉多余表述
+- 保存最终版本
+
+用户：我要准备明天的汇报
+输出：
+title: 准备明天汇报
+steps:
+- 列出汇报重点
+- 检查页面顺序
+- 补充核心结论
+- 练习开场 30 秒
+
+用户：我今天要下楼买早餐，然后改一下 AI 拆解逻辑
+输出两个 tasks：
+1. title: 买早餐
+steps: 穿鞋下楼 / 前往便利店 / 挑选并购买早餐 / 回家
+2. title: 修改 AI 拆解逻辑
+steps: 找到拆解规则 / 删掉泛化步骤 / 补充行动流示例 / 测试两个任务
 
 ## 4. 输出 JSON（仅 JSON，无 markdown）
 {
@@ -254,13 +332,17 @@ function summarizeTitle(text) {
   // 去除开头的时间期限表达
   t = t.replace(/^\d{1,2}点(前|之前|半)?\s*/g, "");
   // 去除口头禅/语气词前缀，保留任务对象
-  t = t.replace(/^(我想要|我想|我要|我需要|我得|需要|帮我|请帮我|麻烦帮我|还要|也要|还得|得去|要去|需要去|去一下|赶紧|赶快|先|记得|要)\s*/g, "");
+  t = t.replace(/^(我今天要|我今天想|我今天需要|今天要|今天想|今天需要|我想要|我想|我要|我需要|我得|需要|帮我|请帮我|麻烦帮我|还要|也要|还得|得去|要去|需要去|去一下|赶紧|赶快|先|记得|要)\s*/g, "");
   // 规范化：下去买 → 下楼买
   t = t.replace(/下去买/g, "下楼买");
   // 去掉时间修饰和名词之间的 "的"：明天早上的早餐 → 明天早上早餐
   t = t.replace(/(早上|下午|晚上|中午|上午|傍晚|明天|今天|后天)(的)/g, "$1");
   // 去除重复名词：买早餐明天早上的早餐 → 买明天早上早餐
   t = t.replace(/(早餐|午餐|晚餐|午饭|晚饭|奶茶|咖啡|水果)(.+?)\1/g, "$2$1");
+  // 连续行动路线提炼成结果型任务标题：下楼买早餐 → 买早餐
+  t = t.replace(/^(下楼|楼下|出去|出门|去|前往|到附近|到楼下)买(.+)$/g, "买$2");
+  t = t.replace(/^去(.+?)(买|取|寄|送)(.+)$/g, "$2$3");
+  t = t.replace(/买(一杯|杯|一个|个|一份|份|一点|点|一些)/g, "买");
   return t.trim();
 }
 
@@ -275,7 +357,7 @@ function parseRawItems(input) {
     .map((part) =>
       summarizeTitle(
         part
-          .replace(/^(今天|本周|今日|明天|我要|我需要|我得|希望|计划|去做|做一下)\s*/i, "")
+          .replace(/^(我今天要|我今天想|我今天需要|今天要|今天想|今天需要|今天|本周|今日|明天|我要|我需要|我得|希望|计划|去做|做一下)\s*/i, "")
           .replace(/^[：:\-–—]\s*/, "")
           .trim()
       )
@@ -313,6 +395,7 @@ function scoreItem(text) {
 function actionizeStepLabel(label) {
   const raw = String(label || "").trim();
   if (!raw) return "写下任务的第一步";
+  if (/^完成「.+」关键一步$/.test(raw) || /^明确「.+」结果$/.test(raw)) return raw;
   if (ACTION_START_PATTERN.test(raw) && !VAGUE_STEP_PATTERN.test(raw)) return raw;
 
   if (/引言|开头|报告|论文|周报|文案|邮件|写/.test(raw)) {
@@ -387,15 +470,14 @@ function buildAdhdStepsForTask(title) {
 
   // 简单任务仅1步，步骤标签即任务本身
   if (isSimple) {
-    return normalizeStepsList([toStep(short, 3)]);
+    return normalizeStepsList([{ label: short, minutes: 3 }]);
   }
 
-  // 默认模板（复杂任务）：以任务完成为目标拆解
+  // 默认模板：保持跟任务本身相关，不生成“打开工具”类步骤
   return normalizeStepsList([
-    toStep(`写下任务目标`, 2),
-    toStep(`列出 3 个要点`, 4),
-    toStep(`完成最小一步`, 5),
-    toStep(`检查完成结果`, 3),
+    { label: `明确「${short}」结果`, minutes: 2 },
+    { label: `完成「${short}」关键一步`, minutes: 5 },
+    { label: `检查「${short}」结果`, minutes: 3 },
   ]);
 }
 
@@ -470,7 +552,7 @@ function planTasksLocally(input) {
 }
 
 function getFocusBoostApiBase() {
-  return (import.meta.env.VITE_FOCUSBOOST_API_BASE || "").replace(/\/$/, "");
+  return (import.meta.env?.VITE_FOCUSBOOST_API_BASE || "").replace(/\/$/, "");
 }
 
 async function planTasksWithBackend(input) {
