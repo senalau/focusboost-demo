@@ -161,7 +161,7 @@ app.post("/api/tasks/plan", async (req, res) => {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
-        temperature: 0.3,
+        temperature: 1,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: TASK_PLANNER_PROMPT },
@@ -202,7 +202,7 @@ app.post("/api/fragments/overdue-message", async (req, res) => {
       },
       body: JSON.stringify({
         model: OPENAI_MODEL,
-        temperature: 0.9,
+        temperature: 1,
         max_tokens: 40,
         messages: [
           {
